@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { ObtenerData } from "../../lib/usuario.db";
 import jwt from "jsonwebtoken";
-export const POSt = (async ({ request, cookies }) => {
+export const POST = (async ({ request, cookies }) => {
     try{
         const token = cookies.get("token")?.value;
         if (!token) {
