@@ -1,0 +1,11 @@
+---
+import Layout from "../layouts/LayoutHome.astro";
+import getToken from "../lib/token.ts";
+import Recicla from "../components/recicla.tsx";
+const { origin } = Astro.url;
+const { token } = getToken(Astro);
+---
+
+<Layout title="Ingresar Reciclaje">
+	<Recicla origin={origin} , nombre={token?.nombre as string} client:load />
+</Layout>

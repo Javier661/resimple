@@ -1,0 +1,9 @@
+---
+import Layout from "../layouts/LayoutHome.astro";
+import Informacion from "../components/informacion.tsx";
+const { origin } = Astro.url;
+---
+
+<Layout title="Ver Registros">
+    <Informacion original={origin} client:load />
+</Layout>

@@ -1,0 +1,208 @@
+---
+const { origin } = Astro.url;
+import Layout from "../layouts/LayoutHome.astro";
+import { ObtenerInfoUsuario } from "../hooks/usuario";
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const { datos, error } = await ObtenerInfoUsuario({ origin, cookieHeader });
+
+// ── Métricas calculadas desde los datos ──
+const totalCasas = datos?.length ?? 0;
+const diasTrabajados = datos ? [...new Set(datos.map((d: any) => d.diatrabajado))].length : 0;
+const comunas = datos ? [...new Set(datos.map((d: any) => d.data.comuna))] : [];
+const regiones = datos ? [...new Set(datos.map((d: any) => d.data.region))] : [];
+
+// Casas por día
+const casasPorDia: Record<number, number> = {};
+datos?.forEach((d: any) => {
+    casasPorDia[d.diatrabajado] = (casasPorDia[d.diatrabajado] ?? 0) + 1;
+});
+
+// Último registro
+const ultimoRegistro = datos?.length
+    ? datos.reduce((a: any, b: any) => new Date(a.fecha) > new Date(b.fecha) ? a : b)
+    : null;
+---
+
+<Layout title="Dashboard">
+    {error ? (
+        <div style="border: 1px solid rgba(239,68,68,0.3); background: rgba(127,29,29,0.2); border-radius: 4px; padding: 12px 20px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #f87171;">✕</span>
+            <p style="font-size: 12px; color: #f87171; font-family: monospace;">{error}</p>
+        </div>
+    ) : (
+        <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem;">
+
+            <!-- Breadcrumb -->
+            <p style="font-size: 11px; color: #52525b; letter-spacing: 0.12em; text-transform: uppercase;">
+                ReciclaTrack <span style="color: #3f3f46;">/</span> <span style="color: #4ade80;">Dashboard</span>
+            </p>
+
+            <!-- KPIs -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+
+                <!-- Total casas -->
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #52525b;">Total Casas</span>
+                        <span style="font-size: 12px;">🏠</span>
+                    </div>
+                    <div style="padding: 20px 16px;">
+                        <p style="font-size: 2.2rem; font-weight: 700; color: #4ade80; line-height: 1;">{totalCasas}</p>
+                        <p style="font-size: 10px; color: #52525b; margin-top: 4px; letter-spacing: 0.08em;">registros ingresados</p>
+                    </div>
+                </div>
+
+                <!-- Días trabajados -->
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #52525b;">Días Trabajados</span>
+                        <span style="font-size: 12px;">📅</span>
+                    </div>
+                    <div style="padding: 20px 16px;">
+                        <p style="font-size: 2.2rem; font-weight: 700; color: #f4f4f5; line-height: 1;">{diasTrabajados}</p>
+                        <p style="font-size: 10px; color: #52525b; margin-top: 4px; letter-spacing: 0.08em;">días con actividad</p>
+                    </div>
+                </div>
+
+                <!-- Comunas -->
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #52525b;">Comunas</span>
+                        <span style="font-size: 12px;">◎</span>
+                    </div>
+                    <div style="padding: 20px 16px;">
+                        <p style="font-size: 2.2rem; font-weight: 700; color: #f4f4f5; line-height: 1;">{comunas.length}</p>
+                        <p style="font-size: 10px; color: #52525b; margin-top: 4px; letter-spacing: 0.08em;">{comunas.join(", ") || "—"}</p>
+                    </div>
+                </div>
+
+                <!-- Promedio por día -->
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #52525b;">Promedio / Día</span>
+                        <span style="font-size: 12px;">⬡</span>
+                    </div>
+                    <div style="padding: 20px 16px;">
+                        <p style="font-size: 2.2rem; font-weight: 700; color: #f4f4f5; line-height: 1;">
+                            {diasTrabajados > 0 ? (totalCasas / diasTrabajados).toFixed(1) : "0"}
+                        </p>
+                        <p style="font-size: 10px; color: #52525b; margin-top: 4px; letter-spacing: 0.08em;">casas por día</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Casas por día + Último registro -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+
+                <!-- Casas por día -->
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 12px 20px; display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #4ade80; font-size: 11px;">⬡</span>
+                        <h2 style="font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #71717a;">Casas por día</h2>
+                    </div>
+                    <div style="padding: 8px 0;">
+                        {Object.entries(casasPorDia).sort(([a], [b]) => Number(a) - Number(b)).map(([dia, cantidad]) => (
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid #1c1c1f;">
+                                <span style="font-size: 10px; color: #52525b; width: 40px; flex-shrink: 0;">Día {dia}</span>
+                                <div style="flex: 1; background: #09090b; border-radius: 2px; height: 6px; overflow: hidden;">
+                                    <div style={`width: ${Math.round((cantidad / totalCasas) * 100)}%; height: 100%; background: #4ade80; border-radius: 2px;`} />
+                                </div>
+                                <span style="font-size: 11px; color: #a1a1aa; width: 20px; text-align: right; flex-shrink: 0;">{cantidad}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <!-- Último registro -->
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 12px 20px; display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #4ade80; font-size: 11px;">≡</span>
+                        <h2 style="font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #71717a;">Último registro</h2>
+                    </div>
+                    {ultimoRegistro ? (
+                        <div style="padding: 20px;">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b;">Dirección</span>
+                                    <span style="font-size: 13px; color: #f4f4f5; font-weight: 600;">
+                                        {ultimoRegistro.data.direccion}
+                                        <span style="color: #4ade80; font-weight: 400; margin-left: 6px;">#{ultimoRegistro.data.numero}</span>
+                                    </span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b;">Comuna</span>
+                                        <span style="font-size: 12px; color: #a1a1aa;">◎ {ultimoRegistro.data.comuna}</span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b;">Región</span>
+                                        <span style="font-size: 12px; color: #a1a1aa;">{ultimoRegistro.data.region}</span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b;">Recolector</span>
+                                        <span style="font-size: 12px; color: #a1a1aa;">👤 {ultimoRegistro.recolector}</span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b;">Día</span>
+                                        <span style="font-size: 12px; color: #a1a1aa;">📅 Día {ultimoRegistro.diatrabajado}</span>
+                                    </div>
+                                </div>
+                                <div style="border-top: 1px solid #27272a; padding-top: 12px;">
+                                    <span style="font-size: 10px; color: #3f3f46;">
+                                        {new Date(ultimoRegistro.fecha).toLocaleDateString("es-CL", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style="padding: 3rem; text-align: center; color: #3f3f46;">
+                            <p style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;">Sin registros</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <!-- Tabla de todos los registros -->
+            <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden;">
+                <div style="border-bottom: 1px solid #27272a; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #4ade80; font-size: 11px;">≡</span>
+                        <h2 style="font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #71717a;">Todos los registros</h2>
+                    </div>
+                    <span style="font-size: 11px; background: rgba(20,83,45,0.3); color: #4ade80; padding: 2px 10px; border-radius: 3px; border: 1px solid rgba(20,83,45,0.5);">
+                        {totalCasas} total
+                    </span>
+                </div>
+
+                <!-- Cabecera -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1fr 1fr 80px; padding: 8px 20px; border-bottom: 1px solid #27272a; background: #09090b;">
+                    {["#", "Dirección", "Región / Comuna", "Recolector", "Fecha", "Día"].map(col => (
+                        <span style="font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #52525b; font-weight: 600;">{col}</span>
+                    ))}
+                </div>
+
+                <!-- Filas -->
+                {datos?.map((row: any, i: number) => (
+                    <div style="display: grid; grid-template-columns: 40px 1fr 1fr 1fr 1fr 80px; padding: 13px 20px; border-bottom: 1px solid #1c1c1f; align-items: center;">
+                        <span style="font-size: 11px; color: #3f3f46;">{String(i + 1).padStart(2, "0")}</span>
+                        <span style="font-size: 13px; color: #f4f4f5; font-weight: 600;">
+                            {row.data.direccion}
+                            <span style="color: #4ade80; font-weight: 400; margin-left: 6px;">#{row.data.numero}</span>
+                        </span>
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <span style="font-size: 11px; color: #a1a1aa;">{row.data.region}</span>
+                            <span style="font-size: 10px; color: #52525b;">◎ {row.data.comuna}</span>
+                        </div>
+                        <span style="font-size: 12px; color: #a1a1aa;">👤 {row.recolector}</span>
+                        <span style="font-size: 11px; color: #71717a;">
+                            {new Date(row.fecha).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
+                        <span style="font-size: 11px; color: #52525b;">Día {row.diatrabajado}</span>
+                    </div>
+                ))}
+            </div>
+
+        </div>
+    )}
+</Layout>

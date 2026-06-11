@@ -1,0 +1,94 @@
+---
+import "../styles/global.css";
+import Navbar from "../components/Navbar.astro";
+import getToken from "../lib/token";
+
+interface Props {
+    title?: string;
+}
+const { title = "ReciclaTrack" } = Astro.props;
+const { token, error } = getToken(Astro);
+---
+
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="generator" content={Astro.generator} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+        <title>{title} — ReciclaTrack</title>
+    </head>
+    <body>
+        {!token ? (
+            <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
+                <div style="position: relative; margin-bottom: 2rem;">
+                    <span style="font-size: 3.5rem; opacity: 0.15;">♻</span>
+                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 1.8rem;">🔒</span>
+                    </div>
+                </div>
+                <div style="border: 1px solid #27272a; background: #18181b; border-radius: 4px; overflow: hidden; width: 100%; max-width: 380px;">
+                    <div style="border-bottom: 1px solid #27272a; padding: 12px 20px; display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #f87171; font-size: 11px;">●</span>
+                        <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #71717a;">
+                            Acceso Denegado
+                        </span>
+                    </div>
+                    <div style="padding: 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;">
+                        <div style="border: 1px solid rgba(239,68,68,0.2); background: rgba(127,29,29,0.15); border-radius: 3px; padding: 10px 16px; width: 100%;">
+                            <p style="font-size: 11px; color: #f87171; font-family: monospace; letter-spacing: 0.05em;">
+                                {error || "No se ha podido verificar tu sesión."}
+                            </p>
+                        </div>
+
+                        <p style="font-size: 12px; color: #71717a; line-height: 1.6;">
+                            Necesitas iniciar sesión para acceder a esta sección del sistema.
+                        </p>
+						<a
+                            href="/"
+                            style="width: 100%; background: #16a34a; border: none; border-radius: 3px; padding: 11px; font-size: 10px; font-family: monospace; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; font-weight: 700; cursor: pointer; text-decoration: none; display: block; text-align: center; transition: background 0.15s;"
+                            onmouseover="this.style.background='#15803d'"
+                            onmouseout="this.style.background='#16a34a'"
+                        >
+                            Iniciar Sesión →
+                        </a>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 14px; opacity: 0.3;">♻</span>
+                    <p style="font-size: 10px; color: #3f3f46; letter-spacing: 0.12em; text-transform: uppercase;">
+                        ReciclaTrack · Sistema de recolección
+                    </p>
+                </div>
+            </div>
+        ) : (
+            <Navbar nombre={token?.nombre}/>
+            <main>
+                <slot />
+            </main>
+        )}
+    </body>
+</html>
+
+<style is:global>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        background: #09090b;
+        color: #f4f4f5;
+        font-family: "JetBrains Mono", monospace;
+        min-height: 100vh;
+    }
+    main {
+        min-height: calc(100vh - 60px);
+        padding: 2rem;
+    }
+</style>

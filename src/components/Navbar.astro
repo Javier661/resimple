@@ -1,0 +1,266 @@
+---
+interface Props {
+    nombre?: string;
+}
+const { origin } = Astro.url;
+const { nombre } = Astro.props;
+const links = [
+    { href: "/dashboard", label: "Home", icon: "⬡" },
+    { href: "/registros", label: "Ver Registros", icon: "≡" },
+    { href: "/ingresar", label: "Ingresar Reciclaje", icon: "+" },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<nav class="navbar">
+    <a href="/" class="navbar-brand">
+        <span class="brand-icon">♻</span>
+        <div class="brand-text">
+            <span class="brand-title">ReciclaTrack</span>
+            <span class="brand-sub">Sistema de recolección</span>
+        </div>
+    </a>
+
+    <ul class="nav-links">
+        {links.map((link) => (
+            <li>
+                <a href={link.href} class={`nav-link ${currentPath === link.href ? "active" : ""}`}>
+                    <span class="nav-icon">{link.icon}</span>
+                    <span class="nav-label">{link.label}</span>
+                    {currentPath === link.href && <span class="active-bar" />}
+                </a>
+            </li>
+        ))}
+    </ul>
+
+    <div class="nav-right">
+        <!-- Dropdown usuario -->
+        <div class="user-menu" id="userMenu">
+            <button class="user-trigger" id="userTrigger">
+                <span class="user-avatar">{nombre ? nombre[0].toUpperCase() : "?"}</span>
+                <span class="user-name">{nombre ?? "Usuario"}</span>
+                <span class="user-chevron">▾</span>
+            </button>
+
+            <div class="user-dropdown" id="userDropdown">
+                <div class="dropdown-header">
+                    <span class="dropdown-avatar">{nombre ? nombre[0].toUpperCase() : "?"}</span>
+                    <div>
+                        <p class="dropdown-name">{nombre ?? "Usuario"}</p>
+                        <p class="dropdown-role">Recolector</p>
+                    </div>
+                </div>
+                <div class="dropdown-divider" />
+                <button class="dropdown-logout" id="logoutBtn">
+                    <span>⏻</span>
+                    Cerrar sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile toggle -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- Mobile drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+    <ul>
+        {links.map((link) => (
+            <li>
+                <a href={link.href} class={`mobile-link ${currentPath === link.href ? "active" : ""}`}>
+                    <span>{link.icon}</span>
+                    {link.label}
+                </a>
+            </li>
+        ))}
+    </ul>
+    <div class="mobile-divider" />
+    <button class="mobile-logout" id="mobileLogoutBtn">
+        <span>⏻</span>
+        Cerrar sesión
+    </button>
+</div>
+
+<style>
+    .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        height: 60px;
+        background: #09090b;
+        border-bottom: 1px solid #27272a;
+        font-family: "JetBrains Mono", "Fira Code", monospace;
+    }
+
+    /* Brand */
+    .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand-icon { font-size: 1.4rem; line-height: 1; }
+    .brand-text { display: flex; flex-direction: column; }
+    .brand-title { font-size: 13px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #4ade80; line-height: 1; }
+    .brand-sub { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #52525b; line-height: 1.6; }
+
+    /* Links */
+    .nav-links { display: flex; align-items: center; gap: 2px; list-style: none; margin: 0; padding: 0; }
+    .nav-link { position: relative; display: flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 3px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; color: #71717a; transition: color 0.15s, background 0.15s; }
+    .nav-link:hover { color: #e4e4e7; background: #18181b; }
+    .nav-link.active { color: #4ade80; background: #14532d22; }
+    .nav-icon { font-size: 13px; font-style: normal; }
+    .active-bar { position: absolute; bottom: -1px; left: 14px; right: 14px; height: 2px; background: #4ade80; border-radius: 2px 2px 0 0; }
+
+    /* Nav right */
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    /* User menu */
+    .user-menu { position: relative; }
+
+    .user-trigger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 3px;
+        padding: 5px 10px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        font-family: "JetBrains Mono", monospace;
+    }
+    .user-trigger:hover { border-color: #3f3f46; background: #27272a; }
+
+    .user-avatar {
+        width: 22px;
+        height: 22px;
+        background: #14532d;
+        border: 1px solid #166534;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #4ade80;
+    }
+    .user-name { font-size: 11px; letter-spacing: 0.08em; color: #a1a1aa; text-transform: uppercase; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-chevron { font-size: 9px; color: #52525b; transition: transform 0.15s; }
+    .user-trigger.open .user-chevron { transform: rotate(180deg); }
+
+    /* Dropdown */
+    .user-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 200px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 4px;
+        overflow: hidden;
+        z-index: 100;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .user-dropdown.open { display: block; }
+
+    .dropdown-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; }
+    .dropdown-avatar { width: 32px; height: 32px; background: #14532d; border: 1px solid #166534; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #4ade80; flex-shrink: 0; }
+    .dropdown-name { font-size: 12px; color: #f4f4f5; font-weight: 600; letter-spacing: 0.05em; }
+    .dropdown-role { font-size: 10px; color: #52525b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
+    .dropdown-divider { height: 1px; background: #27272a; }
+
+    .dropdown-logout {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: transparent;
+        border: none;
+        font-size: 11px;
+        font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #f87171;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .dropdown-logout:hover { background: rgba(127,29,29,0.2); }
+
+    /* Mobile toggle */
+    .menu-toggle { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
+    .menu-toggle span { display: block; width: 22px; height: 2px; background: #71717a; border-radius: 2px; transition: background 0.15s; }
+    .menu-toggle:hover span { background: #4ade80; }
+
+    /* Mobile drawer */
+    .mobile-drawer { display: none; position: fixed; top: 60px; left: 0; right: 0; background: #09090b; border-bottom: 1px solid #27272a; z-index: 49; padding: 8px 0; }
+    .mobile-drawer ul { list-style: none; margin: 0; padding: 0; }
+    .mobile-link { display: flex; align-items: center; gap: 10px; padding: 12px 2rem; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: #71717a; font-family: "JetBrains Mono", monospace; transition: color 0.15s, background 0.15s; }
+    .mobile-link:hover { color: #e4e4e7; background: #18181b; }
+    .mobile-link.active { color: #4ade80; background: #14532d22; }
+
+    .mobile-divider { height: 1px; background: #27272a; margin: 8px 0; }
+    .mobile-logout { display: flex; align-items: center; gap: 10px; padding: 12px 2rem; width: 100%; background: transparent; border: none; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #f87171; font-family: "JetBrains Mono", monospace; cursor: pointer; transition: background 0.15s; }
+    .mobile-logout:hover { background: rgba(127,29,29,0.2); }
+
+    @media (max-width: 640px) {
+        .nav-links { display: none; }
+        .user-name { display: none; }
+        .menu-toggle { display: flex; }
+    }
+</style>
+
+<script>
+    // Mobile drawer
+    const toggle = document.getElementById("menuToggle");
+    const drawer = document.getElementById("mobileDrawer");
+    let drawerOpen = false;
+    toggle?.addEventListener("click", () => {
+        drawerOpen = !drawerOpen;
+        drawer!.style.display = drawerOpen ? "block" : "none";
+    });
+
+    // User dropdown
+    const userTrigger = document.getElementById("userTrigger");
+    const userDropdown = document.getElementById("userDropdown");
+    let dropdownOpen = false;
+
+    userTrigger?.addEventListener("click", () => {
+        dropdownOpen = !dropdownOpen;
+        userTrigger.classList.toggle("open", dropdownOpen);
+        userDropdown!.classList.toggle("open", dropdownOpen);
+    });
+
+    // Cerrar dropdown al hacer click fuera
+    document.addEventListener("click", (e) => {
+        const menu = document.getElementById("userMenu");
+        if (!menu?.contains(e.target as Node)) {
+            dropdownOpen = false;
+            userTrigger?.classList.remove("open");
+            userDropdown?.classList.remove("open");
+        }
+    });
+
+    // Cerrar sesión
+    const logout = async () => {
+        try{
+            const response = await fetch(`${origin}/api/cerrar_sesion`, {method : "GET", headers: {"Content-Type": "application/json"}});
+            const result = await response.json();
+            if(!response.ok) throw new Error(result.error || "Error al cerrar sesión");
+            localStorage.setItem("logout", result.message || "Sesión cerrada exitosamente");
+            window.location.href = "/";
+        }catch(error){
+            const message = error instanceof Error ? error.message : "Error desconocido";
+            localStorage.setItem("logout", message);
+        }
+    };
+
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+    document.getElementById("mobileLogoutBtn")?.addEventListener("click", logout);
+</script>

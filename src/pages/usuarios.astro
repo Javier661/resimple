@@ -1,0 +1,15 @@
+---
+import {obtenerUsuarios} from '../lib/usuario.db'
+const {data, error} = await obtenerUsuarios();
+---
+
+<h1>Usuarios</h1>
+{error && <p>Error al cargar los usuarios: {error}</p>}
+{!data && <p>Cargando usuarios...</p>}
+{data && (
+  <ul>
+    {data.map(usuario => (
+      <li>{usuario.nombre} - {usuario.correo}</li>
+    ))}
+  </ul>
+)}
